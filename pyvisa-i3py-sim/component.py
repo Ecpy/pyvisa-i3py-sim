@@ -37,6 +37,14 @@ NoMatch = NamedObject(name='NoMatch')
 NoResponse = NamedObject(name='NoResponse')
 
 
+#
+ErrorOccurred = NamedObject(name='ErrorOccured')
+
+
+#
+UserSpecifiedChannels = NamedObject('UserSpecifiedChannels')
+
+
 class BaseComponentMixin(HasFeature):
     """Base mixin class for simulated instrument components.
 
@@ -48,20 +56,20 @@ class BaseComponentMixin(HasFeature):
         for f in [f for f in dir(type(self))
                   if isinstance(f, (SimulatedFeature, Dialog))]:
             response = f.match(self, query)
-            if response is not NoResponse:
+            if response is not NoMatch:
                 return response
 
         for s in self.__subsystems__:
             response = s.match(query)
-            if response is not NoResponse:
+            if response is not NoMatch:
                 return response
 
         for c in self.__channels__:
             response = c.match(query)
-            if response is not NoResponse:
+            if response is not NoMatch:
                 return response
 
-        return NoResponse
+        return NoMatch
 
     def handle_error(self, exception):
         """
@@ -158,4 +166,4 @@ class component_channel(channel):
         # In simulated instruments the available channels can be specified
         # when the simulated instrument is initialized.
         if available is None:
-            self._available_ = NamedObject('UserSpecified')
+            self._available_ = UserSpecifiedChannels

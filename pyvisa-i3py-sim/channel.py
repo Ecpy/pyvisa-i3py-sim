@@ -13,14 +13,12 @@ from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
 import re
-from string import Formatter
 
 from stringparser import Parser
 from i3py.core.base_channel import ChannelContainer, Channel
 
-from .component import BaseComponentMixin, NoMatch
-
-_FORMATTER = Formatter()
+from .common import build_matcher
+from .component import BaseComponentMixin, NoMatch, ErrorOccured
 
 
 class SimulatedChannelsContainer(ChannelContainer):
@@ -40,14 +38,14 @@ class SimulatedChannelsContainer(ChannelContainer):
             if '{ch_id' in part._cmd_:
                 # Use $ sign to signal an optional inline selection. In this
                 # case the channel must be declared selectable.
-                if '${ch_id' in part._cmd_ and not self._selectable_:
+                optional_ch = '${ch_id' in part._cmd_
+                if optional_ch and not self._selectable_:
                     raise ValueError('A channel with optional selection in '
                                      'the command string must be selectable.')
-                pattern = '\S*' if '${ch_id' in part._cmd_ else '\S+'
-                self._optional_inline_ = bool('*' in pattern)
+                self._optional_inline_ = optional_ch
                 # Regular expression used to match the query so that an error
                 # in the value does not prevent a match.
-                cmd = '^' + part._cmd_.format(ch_id=pattern)
+                cmd = '^' + build_matcher(part._cmd_, optional_ch)
                 # The parser will extract the selection. If optional the error
                 # will be caught and the previoulsy selected channel will be
                 # used.
@@ -80,6 +78,7 @@ class SimulatedChannelsContainer(ChannelContainer):
                         parsed = {'ch_id': self.selected}
                     else:
                         driver.handle_error(e)
+                        return ErrorOccured
                 self.selected = parsed['ch_id']
 
         if self._selected is None:

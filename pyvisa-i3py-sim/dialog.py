@@ -13,16 +13,13 @@ from __future__ import (division, unicode_literals, print_function,
                         absolute_import)
 
 import re
-from string import Formatter
-from io import StringIO
 
 from stringparser import Parser
 from i3py.core.actions import Action
 
+from .common import build_matcher
 from .component import NoResponse, NoMatch
 from .exceptions import I3pyVisaSimException
-
-_FORMATTER = Formatter()
 
 
 class Dialog(Action):
@@ -53,12 +50,7 @@ class Dialog(Action):
 
         # Regular expression used to match the query so that an error in the
         # value does not prevent a match.
-        matcher = StringIO()
-        for literal, field, fmt, conv in _FORMATTER.parse(cmd):
-            matcher.write(re.escape(literal))
-            if field is not None:
-                matcher.write('\S+')
-        self._matcher = re.compile('^' + matcher.getvalue() + '$')
+        self._matcher = re.compile('^' + build_matcher(cmd) + '$')
 
 
     def match(self, driver, query):
@@ -94,4 +86,3 @@ class Dialog(Action):
             return response or NoResponse
         else:
             return NoMatch
-
