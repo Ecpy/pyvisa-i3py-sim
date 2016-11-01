@@ -16,7 +16,7 @@ from i3py.core import HasFeature, Subsystem, subsystem, channel
 
 from .features import SimulatedFeature
 from .dialog import Dialog
-from .common import NamedObject
+from .common import NamedObject, build_matcher, build_scpi_matcher
 
 
 def to_bytes(val):
@@ -41,7 +41,7 @@ NoResponse = NamedObject(name='NoResponse')
 ErrorOccurred = NamedObject(name='ErrorOccured')
 
 
-#
+# Sentinel marking that the available channels should be specified by the user.
 UserSpecifiedChannels = NamedObject('UserSpecifiedChannels')
 
 
@@ -76,6 +76,12 @@ class BaseComponentMixin(HasFeature):
         """
         raise NotImplementedError()
 
+    @classmethod
+    def finalize_cls_creation(cls):
+        """
+        """
+        pass
+
 
 class Component(BaseComponentMixin, Subsystem):
     """Subcomponent for a simulated instrument.
@@ -84,6 +90,13 @@ class Component(BaseComponentMixin, Subsystem):
     query.
 
     """
+    # XXX build matcher at init and retrieve scpi and case senitivity from root
+    @classmethod
+    def finalize_cls_creation():
+        """
+        """
+        pass
+
     def match(self, query):
         """Analyse whether the query fits any known query.
 
@@ -118,7 +131,7 @@ class component(subsystem):
         on the driver.
 
     """
-    def __init__(self, cmd='', bases=()):
+    def __init__(self, cmd='', use_scpi=None, bases=()):
 
         super(component, self).__init__(bases)
         if cmd:
@@ -154,8 +167,8 @@ class component_channel(channel):
         Container type to use to store channels.
 
     """
-    def __init__(self, cmd='', available=None, selectable=False, bases=(),
-                 aliases=None, container_type=None):
+    def __init__(self, cmd='', available=None, selectable=False,
+                 bases=(),aliases=None, container_type=None):
         if container_type is None:
             from .channel import SimulatedChannelContainer
             container_type = SimulatedChannelContainer

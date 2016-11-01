@@ -57,6 +57,11 @@ class SimulatedFeature(AbstractFeature):
 
         # XXX handle all magic arguments
 
+    def link_to_component(self, component, root):
+        """
+        """
+        pass
+
     def match(self, driver, query):
         """Try to match the query to the getter and setter.
 

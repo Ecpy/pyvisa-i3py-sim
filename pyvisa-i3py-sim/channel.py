@@ -33,6 +33,7 @@ class SimulatedChannelsContainer(ChannelContainer):
         self._available = []
         # Store a reference to the currently selected channel
         self._selected = None
+        # XXX build matcher at init and retrieve scpi and case senitivity from root
         if part._cmd_:
             # Allow to add formatting informations.
             if '{ch_id' in part._cmd_:

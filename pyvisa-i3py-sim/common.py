@@ -77,3 +77,43 @@ def build_matcher(query, optional=False):
         if field is not None:
             matcher.write(pattern)
     return matcher.getvalue()
+
+
+def build_scpi_matcher(query, optional=False):
+    """Build a regular expression allowing to match a scpi command.
+
+    This takes into account the fact that lowercase characters are optional,
+    and character between brackets are also optional.
+
+    """
+    matcher = StringIO()
+    iter_query = iter(query)
+    for c in iter_query:
+
+        # Put lower characters as optional.
+        # TODO in full SCPI any number of character can be specified
+        if c.islower():
+            sub_query = StringIO()
+            sub_query.write(c)
+            while True:
+                c = next(iter_query)
+                if not c.islower():
+                    break
+                sub_query.write(c)
+            matcher.write('(?' + sub_query.getvalue() + ')')
+            # c is now the next character so go on as usual.
+
+        # If we find an optional area delimiter make the content optional.
+        if c == '[':
+            sub_query = StringIO()
+            while True:
+                c = next(iter_query)
+                if c == ']':
+                    break
+                sub_query.write(c)
+            sub_match = build_scpi_matcher(sub_query.getvalue())
+            matcher.write('(?' + sub_match + ')')
+        else:
+            matcher.write(c)
+
+    return build_matcher(matcher.getvalue(), optional)
